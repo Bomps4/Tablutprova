@@ -9,6 +9,7 @@
 #define UNDEX -10000
 #define MAX_DEPTH 3
 
+
 char STATO_BASE[][9]= {{ 'O', 'O', 'O', 'B', 'B', 'B', 'O', 'O', 'O'},{ 'O', 'O', 'O', 'O', 'B', 'O', 'O', 'O', 'O'},{ 'O', 'O', 'O', 'O', 'W', 'O', 'O', 'O', 'O' }, { 'B', 'O', 'O', 'O', 'W', 'O', 'O', 'O', 'B'}, { 'B', 'B', 'W', 'W', 'K', 'W', 'W', 'B', 'B'},{'B', 'O', 'O', 'O', 'W', 'O', 'O', 'O', 'B'}, { 'O', 'O', 'O', 'O', 'W', 'O', 'O', 'O', 'O' },{'O', 'O', 'O', 'O', 'B', 'O', 'O', 'O', 'O' }, { 'O', 'O', 'O', 'B','B', 'B', 'O', 'O', 'O' }};
 short int PESISTANDARD[][9]={{-1000,7,7,-1000,-1000,-1000,7,7,-1000},{7,6,6,5,-1000,5,6,6,7},{7,6,5,4,3,4,5,6,7},{-1000,5,4,3,2,3,5,6,-1000},{-1000,-1000,3,2,1,2,3,-1000,-1000},{-1000,5,4,3,2,3,5,6,-1000},{7,6,5,4,3,4,5,6,7},{7,6,6,5,-1000,5,6,6,7},{-1000,7,7,-1000,-1000,-1000,7,7,-1000}};
 
@@ -60,7 +61,7 @@ public:/* ho inserito le posizioni come dei char per evitare problemi di convers
 Pawn(Pawn const&other){id=other.id;white=other.white;king=other.king;
 for (int i=0;i<2;++i)position[i]=other.position[i];for (int i=0;i<2;++i)genitore[i]=other.genitore[i];};
 Pawn & operator=(Pawn const&other){Pawn copy(other);myswap(*this,copy);return *this;}
-Pawn(Pawn&& that)noexcept:king(false),white(false){for (int i=0;i<2;++i)position[i]=' ';myswap(*this,that);}
+Pawn(Pawn&& that)noexcept:king(false),white(false){myswap(*this,that);}
 Pawn& operator=(Pawn&& that)noexcept{myswap(*this,that);return *this;}
 
 friend void myswap(Pawn& lhs,Pawn& rhs)noexcept{
@@ -97,8 +98,8 @@ for (char i=position[1]-1;i>'0';--i){
 	
 	
 	char arrivo[]={position[0],i};
-	if(ids!=-1) (mosse).push_back(Pawn(arrivo,id,white,king));
-	else (mosse).push_back(Pawn(arrivo,id,white,king)); }
+	if(ids!=-1) (mosse).push_back(Pawn(arrivo,id,genitore,white,king));
+	else (mosse).push_back(Pawn(arrivo,id,arrivo,white,king)); }
 
 
 for (char i=position[1]+1;i!='9';++i){
@@ -109,8 +110,8 @@ for (char i=position[1]+1;i!='9';++i){
 	
 	char arrivo[]={position[0],i};
 
-	if(ids!=-1) (mosse).push_back(Pawn(arrivo,id,white,king));
-	else (mosse).push_back(Pawn(arrivo,id,white,king)); } 
+	if(ids!=-1) (mosse).push_back(Pawn(arrivo,id,genitore,white,king));
+	else (mosse).push_back(Pawn(arrivo,id,arrivo,white,king)); } 
 
 
 for (char i=position[0]-1;i>'a';--i){
@@ -119,8 +120,8 @@ for (char i=position[0]-1;i>'a';--i){
 	
 	char arrivo[]={i,position[1]};
 
-	if(ids!=-1) (mosse).push_back(Pawn(arrivo,id,white,king));
-	else (mosse).push_back(Pawn(arrivo,id,white,king)); }
+	if(ids!=-1) (mosse).push_back(Pawn(arrivo,id,genitore,white,king));
+	else (mosse).push_back(Pawn(arrivo,id,arrivo,white,king)); }
 
 for (char i=position[0]+1;i<'i';++i){
 	if((stato.status[position[0]-'a'][position[1]-'0']!='c' and stato.status[i-'a'][position[1]-'0']=='c') or stato.status[i-'a'][position[1]-'0']!='O') break;
@@ -129,12 +130,12 @@ for (char i=position[0]+1;i<'i';++i){
 	
 	char arrivo[]={i,position[1]};
 	
-	if(ids!=-1) (mosse).push_back(Pawn(arrivo,id,white,king));
-	else (mosse).push_back(Pawn(arrivo,id,white,king)); }
+	if(ids!=-1) (mosse).push_back(Pawn(arrivo,id,genitore,white,king));
+	else (mosse).push_back(Pawn(arrivo,id,arrivo,white,king)); }
 return mosse;}
-Pawn(char start[2],bool lineage=false,bool re=false):white(lineage),king(re)
-{for (short i;i<2;++i){position[i]=start[i];genitore[i]=' ';};}
 
+Pawn(char start[2],int id_0,char* pgenitore ,bool lineage=false,bool re=false):white(lineage),id(id_0),king(re)
+{for (short i;i<2;++i){position[i]=start[i];genitore[i]=pgenitore[i];};}
 Pawn(char start[2],int id_0,bool lineage=false,bool re=false):white(lineage),id(id_0),king(re)
 {for (short i;i<2;++i){position[i]=start[i];genitore[i]=' ';};}
 Pawn(){};};
@@ -152,13 +153,15 @@ if(eur2>eur1){return eur2;}
 else return eur1;
 }
 else {
-short int eur2=distanza*(1*distanza-2)+2*PESISTANDARD[re_pos[0]-'a'][re_pos[1]-'0'];
+short int eur2=distanza*(1*distanza-2)+2*PESISTANDARD[re_pos[0]-'a'][re_pos[1]-'0']-15;
 if(eur2<eur1){return eur2;}
 else return eur1;
 }
 }
 
 class Tree{
+int bianca[MAX_DEPTH];
+int nera[MAX_DEPTH];
 float alpha;
 float euristiche;
 short int uccisioni[MAX_DEPTH];
@@ -198,8 +201,7 @@ Pawn deepen(vector<Pawn> altra_squadra,vector<Pawn> nostra_squadra,short int piu
 			
 				if(i.eaten(stati[depth])) {if(i.get_lineage()){--(uccisioni[depth]);}else{++(uccisioni[depth]);}if(i.get_king()){++iteratori[depth-2];return deepen(altra_squadra,nostra_squadra,depth-2);} continue;} 
 				
-				vector<Pawn> temp=i.detect_moves(stati[depth]);
-				if(depth==(MAX_DEPTH-2)){if(piuprof==0){for (auto u:temp){u.set_genitore((*iteratori[0]).get_position());cout<<u.get_genitore()[0]<<u.get_genitore()[1]<<endl;}}else{for (auto u:temp){u.set_genitore((*iteratori[0]).get_genitore());}};}
+				vector<Pawn> temp=i.detect_moves(stati[depth],1);
 				
 				futuribili.reserve(futuribili.size()+distance((temp).begin(),(temp).end()));
 				
@@ -214,16 +216,21 @@ Pawn deepen(vector<Pawn> altra_squadra,vector<Pawn> nostra_squadra,short int piu
 			
 			iteratori[depth+1]=branches[depth+1].begin();
 			
-			if(iteratori[depth]==branches[depth].begin()){
 			
 			stati[depth+1]=stati[depth];
-			auto gipsy= depth>=2?(*iteratori)[depth-2]:actual_color?*Witerator:*Biterator;
-			if(depth<2){++(actual_color?Witerator:Biterator);}
-			stati[depth+1].move(gipsy.get_position(),(*iteratori[depth]).get_position());}
-
-			else{stati[depth+1].move((*(iteratori[depth]-1)).get_position(),(*iteratori[depth]).get_position());}
+			
+			
+			vector<Pawn>::iterator novita=depth<=1?(nostro_colore?Biterator:Witerator):iteratori[depth-1];
+			if((*iteratori[depth]).get_id()==bianca[depth]){
+				stati[depth+1].move((*novita).get_position(),(*iteratori[depth]).get_position());++nera[depth];}
+			else{bianca[depth]=(*iteratori[depth]).get_id();++(depth==1?(nostro_colore?Biterator:Witerator):iteratori[depth-1]);
+					novita=(depth==1?(nostro_colore?Biterator:Witerator):iteratori[depth-1]);
+					stati[depth+1].move((*novita).get_position(),(*iteratori[depth]).get_position());++nera[depth];
+					if(nera[depth]==(depth==1?(nostro_colore?nostra_squadra:altra_squadra):branches[depth-1]).size()){(depth==1?(nostro_colore?Biterator:Witerator):iteratori[depth-1])-=nera[depth];nera[depth]=0;}
+					;}
 			
 			return deepen(altra_squadra,nostra_squadra,piuprof,depth+1);}
+			
 			float euristica_temp=eur_function(uccisioni,posizione_re[depth],(*iteratori[depth]).get_position(),(*iteratori[depth]).get_lineage());//stati[depth]);
 			
 			if(iteratori[depth]==branches[depth].begin()){euristiche= euristica_temp;}
@@ -242,8 +249,8 @@ Pawn deepen(vector<Pawn> altra_squadra,vector<Pawn> nostra_squadra,short int piu
 if(depth!=0){
 if(alpha==UNDEX)
 	alpha=euristiche;
-else if (actual_color and euristiche>=alpha) alpha=euristiche;
-else if (!actual_color and euristiche<=alpha) alpha=euristiche;
+else if (nostro_colore and euristiche>alpha) alpha=euristiche;
+else if (!nostro_colore and euristiche<alpha) alpha=euristiche;
 uccisioni[depth]=0;
 if(iteratori[depth-1]!=branches[depth-1].end())iteratori[depth-1]++;
 return deepen(altra_squadra,nostra_squadra,piuprof,depth-1);}
@@ -251,16 +258,17 @@ return scelta;};
 
 void super_deepen(vector<Pawn> altra_squadra,vector<Pawn> nostra_squadra,short int depth=0){
 try{
-auto nostra=deepen(altra_squadra,nostra_squadra);
-
-if(branches[MAX_DEPTH-1][0].get_lineage()){Biterator=branches[MAX_DEPTH-2].begin();Witerator=branches[MAX_DEPTH-1].begin();}
-else {Witerator=branches[MAX_DEPTH-2].begin();Biterator=branches[MAX_DEPTH-1].begin();}
+scelta=deepen(altra_squadra,nostra_squadra,0,0);
+auto ricordo=branches[MAX_DEPTH-3];
+auto ricordo2=branches[MAX_DEPTH-2];
+if(branches[MAX_DEPTH-1][0].get_lineage()){Biterator=ricordo2.begin();Witerator=ricordo.begin();}
+else {Witerator=ricordo2.begin();Biterator=ricordo.begin();}
 branches[0].swap(branches[MAX_DEPTH-1]);
 iteratori[0]=branches[0].begin();
 stati[0]=stati[MAX_DEPTH-1];
-auto ritornata=deepen(branches[MAX_DEPTH-2],branches[MAX_DEPTH-1],1);
+scelta=deepen(branches[MAX_DEPTH-2],branches[MAX_DEPTH-1],1);
 }
-catch(...){throw 0;}
+catch(...){}
 ;}
 
 Tree (State stato,vector<Pawn> primo_muovere,vector<Pawn> secondo,char king[2],char presente):alpha(UNDEX),euristiche(UNDEX){
@@ -272,7 +280,7 @@ stati[0]=stato;
 
 vector<Pawn> futuribili;
 for (auto i:primo_muovere){		
-	auto temp=i.detect_moves(stato,1);
+	auto temp=i.detect_moves(stato);
 	futuribili.reserve(futuribili.size()+distance((temp).begin(),(temp).end()));
 	futuribili.insert(futuribili.end(),(temp).begin(),(temp).end());
 
@@ -282,7 +290,7 @@ for (auto i:primo_muovere){
 
 branches[0].swap(futuribili);
 iteratori[0]=branches[0].begin();
-for (int i=0;i<MAX_DEPTH;++i){uccisioni[i]=0;}
+for (int i=0;i<MAX_DEPTH;++i){uccisioni[i]=0;bianca[i]=0;nera[i]=0;}
 }
 
 };
@@ -298,8 +306,7 @@ extern "C" char* execution (char stato[9][9],char presente='W',int time=57){
 
 vector<Pawn> WPawn;
 vector<Pawn> BPawn;
-for (short int i=0;i<9;++i){
-		{for (short int j=0;j<9;++j)cout<<stato[i][j]<<endl;};}
+
 char king_position[2];
 	for (short int i=0;i<9;++i){
 		for (short int j=0;j<9;++j) {
@@ -307,12 +314,16 @@ char king_position[2];
 				{char posizione[2]={i+'a',j+'0'};
 				if((stato[i][j]=='W')) {WPawn.push_back(Pawn(posizione,WPawn.size(),true,false));}
 				else if(stato[i][j]=='K'){WPawn.push_back(Pawn(posizione,WPawn.size(),true,true));king_position[0]=(char)i+'a';king_position[1]=(char)i+'0';}
-				else BPawn.push_back(Pawn(posizione,WPawn.size(),false,false));};};}
+				else BPawn.push_back(Pawn(posizione,BPawn.size(),false,false));};};}
 
 State current(stato);
 
-Tree albero(current,WPawn,BPawn,king_position,'W');
-try{thread t{&Tree::super_deepen,&albero,BPawn,WPawn,0};
+
+Tree albero(current,WPawn,BPawn,king_position,presente);
+try{
+thread t;
+if(presente=='W')t=thread(&Tree::super_deepen,&albero,BPawn,WPawn,0);
+else t=thread(&Tree::super_deepen,&albero,WPawn,BPawn,0);
 
 this_thread::sleep_for(std::chrono::seconds(time));
 
@@ -322,12 +333,9 @@ catch(...){};
 exit_thread_flag = false;
 Pawn scelta=albero.scelta;
 char* uscita=new char [6];
-cout<<"sono l id"<<scelta.get_id()<<endl;
-cout<<"sono il genitore"<<scelta.get_genitore()[0]<<scelta.get_genitore()[1]<<endl;
-if(scelta.get_genitore()[0]==' '){for (int i=4;i<6;++i){uscita[i]=scelta.get_position()[i-4];};}
-else{for (int i=4;i<6;++i){uscita[i]=scelta.get_genitore()[i-4];};}
+for (int i=4;i<6;++i){uscita[i]=scelta.get_genitore()[i-4];};
 for (int i=0;i<2;++i){if(presente=='W')uscita[i]=WPawn[scelta.get_id()].get_position()[i]; else if(presente=='B')uscita[i]=BPawn[scelta.get_id()].get_position()[i];}
-cout<<"sono fuori"<<endl;
+
 uscita[2]='-';
 uscita[3]='>';
 cout<<uscita<<endl;
