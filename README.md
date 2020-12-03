@@ -7,6 +7,7 @@ also python version 3.6 or more recent is required along with the numpy and stru
 
 to run the player is necessary to write 
 '''
+
 python3 implicazionicomicheimplicite.py ip-adress_of_the_server player_role timeout
 '''
 
